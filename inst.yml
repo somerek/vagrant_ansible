@@ -39,10 +39,6 @@
         name: php5.6
         state: present
         update_cache: yes
-    - name: Install php-fpm
-      apt:
-        name: php-fpm
-        state: present
       notify:
         - restart nginx
     - name: Create nginx homedir
