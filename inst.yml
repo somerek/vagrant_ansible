@@ -39,8 +39,6 @@
         name: php5.6
         state: present
         update_cache: yes
-      notify:
-        - restart nginx
     - name: Create nginx homedir
       file:
         path: /var/nginx
