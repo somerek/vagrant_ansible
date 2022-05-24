@@ -3,90 +3,72 @@
   hosts: all
   become: true
   tasks:
-  - name: Install vim
-    apt:
-      name: vim
-      state: present
-  - name: Install wget
-    apt:
-      name: wget
-      state: present
-  - name: Install htop
-    apt:
-      name: htop
-      state: present
-  - name: Install tmux
-    apt:
-      name: tmux
-      state: present
-  - name: Install Apache Webserver
-    apt:
-      name: apache2
-      state: present
-  - name: apache2 virtualhost on port 8888
-    lineinfile: dest=/etc/apache2/sites-available/000-default.conf regexp="^<VirtualHost \*:80>" line="<VirtualHost *:8888>" state=present
-    notify:
-      - restart apache2
-  - name: apache2 listen on port 8888
-    lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8888" state=present
-    notify:
-      - restart apache2
-  - name: Install gnutls-bin
-    apt:
-      name: gnutls-bin
-      state: present
-  - name: Install ca-certificates
-    apt:
-      name: ca-certificates
-      state: present
-  - name: Download gpg
-    get_url:
-      url: https://packages.sury.org/php/apt.gpg
-      dest: /etc/apt/trusted.gpg.d/php.gpg
-  - name: Install apt-transport-https
-    apt:
-      name: apt-transport-https
-      state: present
-  - name: Add php repo
-    copy:
-      content: "deb https://packages.sury.org/php/ stretch main"
-      dest: /etc/apt/sources.list.d/php.list
-  - name: Install php5.6
-    apt:
-      name: php5.6
-      state: present
-      update_cache: yes
-  - name: Install nginx
-    apt:
-      name: nginx
-      state: present
-  - name: Install php-fpm
-    apt:
-      name: php-fpm
-      state: present
-    notify:
-      - restart nginx
-  - name: Create nginx homedir
-    file:
-      path: /var/nginx
-      state: directory
-  - name: Create php script in nginx home
-    copy:
-      src: index.php
-      dest: /var/nginx/index.php
-  - name: Change nginx settings
-    copy:
-      src: default
-      dest: /etc/nginx/sites-available/default
-    notify:
-      - restart nginx
-  - name: Correct php version selected
-    alternatives:
-      name: php
-      path: /usr/bin/php5.6
+    - name: Install packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - vim
+        - wget
+        - htop
+        - tmux
+        - nginx
+        - apache2
+        - gnutls-bin
+        - ca-certificates
+        - apt-transport-https
+
+    - name: apache2 virtualhost on port 8888
+      lineinfile: dest=/etc/apache2/sites-available/000-default.conf regexp="^<VirtualHost \*:80>" line="<VirtualHost *:8888>" state=present
+      notify:
+        - restart apache2
+    - name: apache2 listen on port 8888
+      lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen 80" line="Listen 8888" state=present
+      notify:
+        - restart apache2
+    - name: Download gpg
+      get_url:
+        url: https://packages.sury.org/php/apt.gpg
+        dest: /etc/apt/trusted.gpg.d/php.gpg
+    - name: Add php repo
+      copy:
+        content: "deb https://packages.sury.org/php/ stretch main"
+        dest: /etc/apt/sources.list.d/php.list
+    - name: Install php5.6
+      apt:
+        name: php5.6
+        state: present
+        update_cache: yes
+    - name: Install php-fpm
+      apt:
+        name: php-fpm
+        state: present
+      notify:
+        - restart nginx
+    - name: Create nginx homedir
+      file:
+        path: /var/nginx
+        state: directory
+    - name: Create php script in nginx home
+      copy:
+        src: index.php
+        dest: /var/nginx/index.php
+    - name: Change nginx settings
+      copy:
+        src: default
+        dest: /etc/nginx/sites-available/default
+      notify:
+        - restart nginx
+    - name: Correct php version selected
+      alternatives:
+        name: php
+        path: /usr/bin/php5.6
+    - name: Install php-fpm
+      apt:
+        name: php-fpm
+        state: latest
   handlers:
     - name: restart apache2
       service: name=apache2 state=restarted
     - name: restart nginx
       service: name=nginx state=restarted
-...
