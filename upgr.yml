@@ -1,5 +1,5 @@
 ---
-- name: Install all
+- name: Upgrade php ver
   hosts: all
   become: true
   tasks:
